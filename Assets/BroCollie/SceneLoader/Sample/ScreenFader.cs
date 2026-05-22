@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using UnityEngine;
 
-public class ScreenFader : MonoBehaviour, IScreenFader
+public class ScreenFader : MonoBehaviour
 {
     [SerializeField] private CanvasGroup _canvasGroup;
     [SerializeField] private float _fadeDuration = 1f;

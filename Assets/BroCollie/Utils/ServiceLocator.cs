@@ -1,55 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace BroCollie.Util
 {
     public static class ServiceLocator
     {
-        private static readonly Dictionary<Type, object> s_services = new();
+        private static readonly Dictionary<Type, object> _services = new();
 
-        public static void Register<T>(T service)
+        public static void Register<T>(T serviceInstance)
         {
-            if (service == null)
-            {
-                Debug.LogError($"[ServiceLocator] Cannot register a null service. Type: {typeof(T).Name}.");
-                return;
-            }
+            if (serviceInstance == null) return;
 
-            if (s_services.ContainsKey(typeof(T)))
-            {
-                Debug.LogWarning($"[ServiceLocator] Overriding service. Type: {typeof(T).Name}");
-            }
-
-            s_services.Add(typeof(T), service);
+            Type serviceType = typeof(T);
+            _services[serviceType] = serviceInstance;
         }
 
         public static void Unregister<T>()
         {
-            if (!s_services.Remove(typeof(T)))
-            {
-                Debug.LogWarning($"[ServiceLocator] Service is not registered. Type: {typeof(T).Name}");
-            }
+            Type serviceType = typeof(T);
+            _services.Remove(serviceType);
         }
 
-        public static T GetService<T>()
+        public static T Get<T>()
         {
-            if (s_services.TryGetValue(typeof(T), out object service))
+            Type serviceType = typeof(T);
+            if (_services.TryGetValue(serviceType, out object instance))
             {
-                return (T)service;
+                if (instance != null)
+                    return (T)instance;
+                Unregister<T>();
             }
-            throw new InvalidOperationException($"[ServiceLocator] Service is not registered. Type: {typeof(T).Name}");
+            throw new InvalidOperationException($"[ServiceLocator] Service '{serviceType.Name}' not registered.");
         }
 
-        public static bool IsServiceRegistered<T>()
+        public static bool TryGet<T>(out T service)
         {
-            return s_services.ContainsKey(typeof(T));
+            service = default;
+            Type serviceType = typeof(T);
+            if (_services.TryGetValue(serviceType, out object instance))
+            {
+                if (instance != null)
+                {
+                    service = (T)instance;
+                    return true;
+                }
+                Unregister<T>();
+            }
+            return false;
+        }
+
+        public static bool Contains<T>()
+        {
+            return _services.ContainsKey(typeof(T));
         }
 
         public static void ClearServices()
         {
-            s_services.Clear();
-            Debug.Log("[ServiceLocator] All services cleared.");
+            _services.Clear();
         }
     }
 }
